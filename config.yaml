@@ -1,0 +1,39 @@
+log:
+  disable_sentry: true
+  level: debug
+
+db:
+  url: "postgres://postgres:postgres@localhost:5432/evm_saver?sslmode=disable"
+
+listener:
+  addr: :8000
+
+evm:
+  contract_addr: ""
+  rpc: ""
+  start_from_block: ""
+  network_name:
+
+broadcaster:
+  addr: ""
+  sender_account: ""
+
+core:
+  addr:
+
+cosmos:
+  addr:
+
+infura_ipfs_gateway:
+  credentials:
+    - gateway_url:
+      project_secret:
+      project_id:
+
+subscriber:
+  min_retry_period:
+  max_retry_period:
+
+profiler:
+  enabled: true
+  addr: :8080
