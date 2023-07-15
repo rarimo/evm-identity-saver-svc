@@ -11,8 +11,9 @@ listener:
 evm:
   contract_addr: ""
   rpc: ""
-  start_from_block: ""
+  start_from_block:
   network_name:
+  block_window:
 
 broadcaster:
   addr: ""
@@ -23,12 +24,6 @@ core:
 
 cosmos:
   addr:
-
-infura_ipfs_gateway:
-  credentials:
-    - gateway_url:
-      project_secret:
-      project_id:
 
 subscriber:
   min_retry_period:

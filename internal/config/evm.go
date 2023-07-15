@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"math/big"
 	"reflect"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -18,7 +17,7 @@ type Ethereum struct {
 	RPCClient      *ethclient.Client `fig:"rpc,required"`
 	StartFromBlock uint64            `fig:"start_from_block"`
 	NetworkName    string            `fig:"network_name,required"`
-	ChainID        *big.Int          `fig:"-"`
+	BlockWindow    uint64            `fig:"block_window,required"`
 }
 
 func (c *config) Ethereum() *Ethereum {
@@ -34,12 +33,14 @@ func (c *config) Ethereum() *Ethereum {
 			panic(errors.Wrap(err, "failed to figure out evm config"))
 		}
 
-		cID, err := cfg.RPCClient.ChainID(context.TODO())
-		if err != nil {
-			panic(errors.Wrap(err, "failed to get chain id"))
-		}
+		if cfg.StartFromBlock == 0 {
+			block, err := cfg.RPCClient.BlockNumber(context.TODO())
+			if err != nil {
+				panic(errors.Wrap(err, "failed to fetch last block"))
+			}
 
-		cfg.ChainID = cID
+			cfg.StartFromBlock = block
+		}
 
 		return &cfg
 	}).(*Ethereum)

@@ -34,6 +34,7 @@ type config struct {
 	cosmos     comfig.Once
 	tendermint comfig.Once
 	states     comfig.Once
+	redis      comfig.Once
 
 	getter kv.Getter
 }
