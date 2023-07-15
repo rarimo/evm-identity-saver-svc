@@ -2,7 +2,6 @@ package rarimo
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -55,9 +54,6 @@ func (m *StateUpdateMessageMaker) LastStateUpdateMsg(ctx context.Context) (*orac
 
 	replacedState := states[0]
 	latestState := states[1]
-
-	fmt.Println(replacedState)
-	fmt.Println(latestState)
 
 	length, err = m.stateDataProvider.GetGISTRootHistoryLength(&bind.CallOpts{
 		Context: ctx,
