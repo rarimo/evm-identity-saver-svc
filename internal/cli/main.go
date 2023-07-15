@@ -41,7 +41,6 @@ func Run(args []string) bool {
 	stateUpdateAll := runCmd.Command("state-update-all", "run all state update related services")
 	stateUpdateVoter := runCmd.Command("state-update-voter", "run state update voter")
 	stateUpdateSaver := runCmd.Command("state-update-saver", "run state update saver")
-	stateUpdateCatchup := runCmd.Command("state-update-catchup", "run state update catchup")
 
 	cmd, err := app.Parse(args[1:])
 	if err != nil {
@@ -88,8 +87,6 @@ func Run(args []string) bool {
 		run(voting.RunStateUpdateVoter, "voter")
 	case stateUpdateSaver.FullCommand():
 		run(evm.RunStateChangeListener, "state-change-listener")
-	case stateUpdateCatchup.FullCommand():
-		run(evm.RunStateChangeCatchup, "state-change-catchup")
 	default:
 		panic(errors.From(errors.New("unknown command"), logan.F{
 			"raw_command": cmd,
