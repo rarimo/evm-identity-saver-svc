@@ -76,15 +76,18 @@ func RunStateUpdateVoter(ctx context.Context, cfg config.Config) {
 
 func (s *stateUpdateVerifier) Verify(ctx context.Context, operation rarimocore.Operation) (rarimocore.VoteType, error) {
 	if operation.OperationType != rarimocore.OpType_IDENTITY_DEFAULT_TRANSFER {
+		s.log.Debugf("Voted NO: invalid operation type")
 		return rarimocore.VoteType_NO, verifiers.ErrInvalidOperationType
 	}
 
 	var stateUpdated rarimocore.IdentityDefaultTransfer
 	if err := proto.Unmarshal(operation.Details.Value, &stateUpdated); err != nil {
+		s.log.Debugf("Voted NO: failed to unmarshal")
 		return rarimocore.VoteType_NO, err
 	}
 
 	if err := s.verifyIdentityDefaultTransfer(ctx, stateUpdated); err != nil {
+		s.log.WithError(err).Debugf("Voted NO: received an error from verifier")
 		switch errors.Cause(err) {
 		case verifiers.ErrUnsupportedNetwork:
 			return rarimocore.VoteType_NO, verifiers.ErrUnsupportedNetwork

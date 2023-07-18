@@ -9,13 +9,13 @@ ENV CGO_ENABLED=1
 ENV GOOS="linux"
 
 RUN apk add build-base
-RUN go build -o /usr/local/bin/evm-idenity-saver-svc gitlab.com/rarimo/polygonid/evm-identity-saver-svc
+RUN go build -o /usr/local/bin/evm-identity-saver-svc gitlab.com/rarimo/polygonid/evm-identity-saver-svc
 
 ###
 
 FROM alpine:3.9
 
-COPY --from=buildbase /usr/local/bin/evm-idenity-saver-svc /usr/local/bin/evm-idenity-saver-svc
+COPY --from=buildbase /usr/local/bin/evm-identity-saver-svc /usr/local/bin/evm-identity-saver-svc
 RUN apk add --no-cache ca-certificates
 
-ENTRYPOINT ["evm-idenity-saver-svc"]
+ENTRYPOINT ["evm-identity-saver-svc"]
