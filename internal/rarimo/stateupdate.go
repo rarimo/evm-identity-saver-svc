@@ -146,6 +146,7 @@ func (m *StateUpdateMessageMaker) getStatesOnBlock(ctx context.Context, block *b
 			return &latestState, &replacedState, nil
 		}
 
+		// FIXME maybe increase step to reduce RPC calls amount
 		length.Sub(length, big.NewInt(1))
 
 		if length.Cmp(big.NewInt(1)) == 0 {
