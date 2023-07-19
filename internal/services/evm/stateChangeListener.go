@@ -129,9 +129,10 @@ func (l *stateChangeListener) subscription(ctx context.Context) error {
 			"tx_hash":   e.Raw.TxHash,
 			"tx_index":  e.Raw.TxIndex,
 			"log_index": e.Raw.Index,
-		}).Debug("got event")
+		}).Debugf("got event: id: %s block: %s timestamp: %s state: %s", e.Id.String(), e.BlockN.String(), e.Timestamp.String(), e.State.String())
 
 		if e.Id.Cmp(l.watchedIssuerID) != 0 {
+			l.log.Debugf("Skipping event: other issuer, required: %s, got: %s", l.watchedIssuerID.String(), e.Id.String())
 			continue
 		}
 
