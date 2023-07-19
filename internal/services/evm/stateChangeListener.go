@@ -57,7 +57,7 @@ func RunStateChangeListener(ctx context.Context, cfg config.Config) {
 }
 
 type stateUpdateMsger interface {
-	LastStateUpdateMsg(ctx context.Context) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error)
+	StateUpdateMsgByBlock(ctx context.Context, block *big.Int) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error)
 }
 
 type blockHandler interface {
@@ -137,7 +137,7 @@ func (l *stateChangeListener) subscription(ctx context.Context) error {
 		}
 
 		// Getting last state message
-		msg, err := l.msger.LastStateUpdateMsg(ctx)
+		msg, err := l.msger.StateUpdateMsgByBlock(ctx, e.BlockN)
 		if err != nil {
 			l.log.WithError(err).WithField("tx_hash", e.Raw.TxHash.String()).Error("failed to craft state updated msg")
 			continue
