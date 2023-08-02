@@ -7,7 +7,7 @@ import (
 )
 
 type StateV2Config struct {
-	IssuerID          []string `fig:"issuer_id,required"`
+	IssuerID          []string `fig:"issuer_id"`
 	DisableFiltration bool     `fig:"disable_filtration"`
 }
 
