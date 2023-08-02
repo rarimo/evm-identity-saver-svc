@@ -1,15 +1,14 @@
 package config
 
 import (
-	"math/big"
-
 	"gitlab.com/distributed_lab/figure"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 )
 
 type StateV2Config struct {
-	IssuerID *big.Int `fig:"issuer_id,required"`
+	IssuerID          []string `fig:"issuer_id,required"`
+	DisableFiltration bool     `fig:"disable_filtration"`
 }
 
 func (c *config) States() StateV2Config {
