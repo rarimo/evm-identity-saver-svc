@@ -44,9 +44,8 @@ func RunStateChangeListener(ctx context.Context, cfg config.Config) {
 			cfg.Ethereum().ContractAddr.String(),
 			cfg.Ethereum().NetworkName,
 			stateData,
-			cfg.States().IssuerID,
 		),
-		watchedIssuerID: cfg.States().IssuerID,
+		watchedIssuerID: Map(cfg.States().IssuerID),
 		fromBlock:       cfg.Ethereum().StartFromBlock,
 		blockWindow:     cfg.Ethereum().BlockWindow,
 	}
@@ -57,7 +56,7 @@ func RunStateChangeListener(ctx context.Context, cfg config.Config) {
 }
 
 type stateUpdateMsger interface {
-	StateUpdateMsgByBlock(ctx context.Context, block *big.Int) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error)
+	StateUpdateMsgByBlock(ctx context.Context, issuer, block *big.Int) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error)
 }
 
 type blockHandler interface {
@@ -71,9 +70,10 @@ type stateChangeListener struct {
 	msger        stateUpdateMsger
 	blockHandler blockHandler
 
-	watchedIssuerID *big.Int
-	fromBlock       uint64
-	blockWindow     uint64
+	watchedIssuerID   map[string]struct{}
+	disableFiltration bool
+	fromBlock         uint64
+	blockWindow       uint64
 }
 
 func (l *stateChangeListener) subscription(ctx context.Context) error {
@@ -131,13 +131,15 @@ func (l *stateChangeListener) subscription(ctx context.Context) error {
 			"log_index": e.Raw.Index,
 		}).Debugf("got event: id: %s block: %s timestamp: %s state: %s", e.Id.String(), e.BlockN.String(), e.Timestamp.String(), e.State.String())
 
-		if e.Id.Cmp(l.watchedIssuerID) != 0 {
-			l.log.Debugf("Skipping event: other issuer, required: %s, got: %s", l.watchedIssuerID.String(), e.Id.String())
-			continue
+		if !l.disableFiltration {
+			if _, ok := l.watchedIssuerID[e.Id.String()]; !ok {
+				l.log.Debugf("Skipping event: id %s is not allowed", e.Id.String())
+				continue
+			}
 		}
 
 		// Getting last state message
-		msg, err := l.msger.StateUpdateMsgByBlock(ctx, e.BlockN)
+		msg, err := l.msger.StateUpdateMsgByBlock(ctx, e.Id, e.BlockN)
 		if err != nil {
 			l.log.WithError(err).WithField("tx_hash", e.Raw.TxHash.String()).Error("failed to craft state updated msg")
 			continue
@@ -150,4 +152,12 @@ func (l *stateChangeListener) subscription(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func Map[T comparable](arr []T) map[T]struct{} {
+	res := make(map[T]struct{})
+	for _, v := range arr {
+		res[v] = struct{}{}
+	}
+	return res
 }

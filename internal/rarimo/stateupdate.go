@@ -29,15 +29,14 @@ type StateUpdateMessageMaker struct {
 	contract          string
 	homeChain         string
 	stateDataProvider StateDataProvider
-	watchedIssuerID   *big.Int
 }
 
-func NewStateUpdateMessageMaker(txCreatorAddr string, contract string, homeChain string, stateDataProvider StateDataProvider, issuerID *big.Int) *StateUpdateMessageMaker {
-	return &StateUpdateMessageMaker{txCreatorAddr: txCreatorAddr, contract: contract, homeChain: homeChain, stateDataProvider: stateDataProvider, watchedIssuerID: issuerID}
+func NewStateUpdateMessageMaker(txCreatorAddr string, contract string, homeChain string, stateDataProvider StateDataProvider) *StateUpdateMessageMaker {
+	return &StateUpdateMessageMaker{txCreatorAddr: txCreatorAddr, contract: contract, homeChain: homeChain, stateDataProvider: stateDataProvider}
 }
 
-func (m *StateUpdateMessageMaker) StateUpdateMsgByBlock(ctx context.Context, block *big.Int) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error) {
-	latestState, replacedState, err := m.getStatesOnBlock(ctx, block)
+func (m *StateUpdateMessageMaker) StateUpdateMsgByBlock(ctx context.Context, issuer, block *big.Int) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error) {
+	latestState, replacedState, err := m.getStatesOnBlock(ctx, issuer, block)
 
 	length, err := m.stateDataProvider.GetGISTRootHistoryLength(&bind.CallOpts{
 		Context: ctx,
@@ -62,17 +61,17 @@ func (m *StateUpdateMessageMaker) StateUpdateMsgByBlock(ctx context.Context, blo
 	return m.StateUpdateMsgByStates(ctx, *latestState, *replacedState, latestGIST, replacedGIST)
 }
 
-func (m *StateUpdateMessageMaker) StateUpdateMsgByHashes(ctx context.Context, latestStateHash, replacedStateHash, latestGISTHash, replacedGISTHash string) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error) {
+func (m *StateUpdateMessageMaker) StateUpdateMsgByHashes(ctx context.Context, issuer, latestStateHash, replacedStateHash, latestGISTHash, replacedGISTHash string) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error) {
 	latestState, err := m.stateDataProvider.GetStateInfoByIdAndState(&bind.CallOpts{
 		Context: ctx,
-	}, m.watchedIssuerID, new(big.Int).SetBytes(hexutil.MustDecode(latestStateHash)))
+	}, new(big.Int).SetBytes(hexutil.MustDecode(issuer)), new(big.Int).SetBytes(hexutil.MustDecode(latestStateHash)))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get latest state")
 	}
 
 	replacedState, err := m.stateDataProvider.GetStateInfoByIdAndState(&bind.CallOpts{
 		Context: ctx,
-	}, m.watchedIssuerID, new(big.Int).SetBytes(hexutil.MustDecode(replacedStateHash)))
+	}, new(big.Int).SetBytes(hexutil.MustDecode(issuer)), new(big.Int).SetBytes(hexutil.MustDecode(replacedStateHash)))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get replaced state")
 	}
@@ -122,10 +121,10 @@ func (m *StateUpdateMessageMaker) StateUpdateMsgByStates(_ context.Context, late
 
 }
 
-func (m *StateUpdateMessageMaker) getStatesOnBlock(ctx context.Context, block *big.Int) (*statebind.IStateStateInfo, *statebind.IStateStateInfo, error) {
+func (m *StateUpdateMessageMaker) getStatesOnBlock(ctx context.Context, issuer, block *big.Int) (*statebind.IStateStateInfo, *statebind.IStateStateInfo, error) {
 	length, err := m.stateDataProvider.GetStateInfoHistoryLengthById(&bind.CallOpts{
 		Context: ctx,
-	}, m.watchedIssuerID)
+	}, issuer)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get overall states count")
 	}
@@ -133,7 +132,7 @@ func (m *StateUpdateMessageMaker) getStatesOnBlock(ctx context.Context, block *b
 	for {
 		states, err := m.stateDataProvider.GetStateInfoHistoryById(&bind.CallOpts{
 			Context: ctx,
-		}, m.watchedIssuerID, new(big.Int).Sub(length, big.NewInt(2)), big.NewInt(2))
+		}, issuer, new(big.Int).Sub(length, big.NewInt(2)), big.NewInt(2))
 
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "failed to get last two states")

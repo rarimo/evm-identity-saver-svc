@@ -22,7 +22,7 @@ const (
 )
 
 type stateUpdateMsger interface {
-	StateUpdateMsgByHashes(ctx context.Context, latestStateHash, replacedStateHash, latestGISTHash, replacedGISTHash string) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error)
+	StateUpdateMsgByHashes(ctx context.Context, issuer, latestStateHash, replacedStateHash, latestGISTHash, replacedGISTHash string) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error)
 }
 
 type stateUpdateVerifier struct {
@@ -47,7 +47,6 @@ func NewStateUpdateVerifier(cfg config.Config) *stateUpdateVerifier {
 			cfg.Ethereum().ContractAddr.String(),
 			cfg.Ethereum().NetworkName,
 			stateV2,
-			cfg.States().IssuerID,
 		),
 	}
 }
@@ -103,7 +102,7 @@ func (s *stateUpdateVerifier) Verify(ctx context.Context, operation rarimocore.O
 }
 
 func (s *stateUpdateVerifier) verifyIdentityDefaultTransfer(ctx context.Context, transfer rarimocore.IdentityDefaultTransfer) error {
-	msg, err := s.msger.StateUpdateMsgByHashes(ctx, transfer.StateHash, transfer.ReplacedStateHash, transfer.GISTHash, transfer.ReplacedGISTHash)
+	msg, err := s.msger.StateUpdateMsgByHashes(ctx, transfer.Id, transfer.StateHash, transfer.ReplacedStateHash, transfer.GISTHash, transfer.ReplacedGISTHash)
 	if err != nil {
 		return errors.Wrap(err, "failed to get msg")
 	}
