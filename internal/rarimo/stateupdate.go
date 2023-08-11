@@ -37,6 +37,9 @@ func NewStateUpdateMessageMaker(txCreatorAddr string, contract string, homeChain
 
 func (m *StateUpdateMessageMaker) StateUpdateMsgByBlock(ctx context.Context, issuer, block *big.Int) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error) {
 	latestState, replacedState, err := m.getStatesOnBlock(ctx, issuer, block)
+	if err != nil {
+		return nil, err
+	}
 
 	length, err := m.stateDataProvider.GetGISTRootHistoryLength(&bind.CallOpts{
 		Context: ctx,
