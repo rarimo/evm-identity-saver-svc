@@ -45,9 +45,10 @@ func RunStateChangeListener(ctx context.Context, cfg config.Config) {
 			cfg.Ethereum().NetworkName,
 			stateData,
 		),
-		watchedIssuerID: Map(cfg.States().IssuerID),
-		fromBlock:       cfg.Ethereum().StartFromBlock,
-		blockWindow:     cfg.Ethereum().BlockWindow,
+		watchedIssuerID:   Map(cfg.States().IssuerID),
+		disableFiltration: cfg.States().DisableFiltration,
+		fromBlock:         cfg.Ethereum().StartFromBlock,
+		blockWindow:       cfg.Ethereum().BlockWindow,
 	}
 
 	running.WithBackOff(ctx, log, runnerName,
