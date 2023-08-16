@@ -41,6 +41,10 @@ func (m *StateUpdateMessageMaker) StateUpdateMsgByBlock(ctx context.Context, iss
 		return nil, err
 	}
 
+	if latestState == nil || replacedState == nil {
+		return nil, nil
+	}
+
 	length, err := m.stateDataProvider.GetGISTRootHistoryLength(&bind.CallOpts{
 		Context: ctx,
 	})
@@ -130,6 +134,12 @@ func (m *StateUpdateMessageMaker) getStatesOnBlock(ctx context.Context, issuer, 
 	}, issuer)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get overall states count")
+	}
+
+	if length.Cmp(big.NewInt(1)) == 0 {
+		// It is a new state. Only one state transition exist. Ignore that state transition.
+		// FIXME
+		return nil, nil, nil
 	}
 
 	for {

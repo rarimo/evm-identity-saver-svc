@@ -146,6 +146,11 @@ func (l *stateChangeListener) subscription(ctx context.Context) error {
 			continue
 		}
 
+		if msg == nil {
+			l.log.WithField("tx_hash", e.Raw.TxHash.String()).Info("ignoring that state transition")
+			continue
+		}
+
 		if err := l.broadcaster.BroadcastTx(ctx, msg); err != nil {
 			l.log.WithError(err).WithField("tx_hash", e.Raw.TxHash.String()).Error(err, "failed to broadcast state updated msg")
 			continue
