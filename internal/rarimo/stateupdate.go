@@ -8,9 +8,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
+	statebind "github.com/rarimo/evm-identity-saver-svc/pkg/state"
+	oracletypes "github.com/rarimo/rarimo-core/x/oraclemanager/types"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	statebind "gitlab.com/rarimo/polygonid/evm-identity-saver-svc/pkg/state"
-	oracletypes "gitlab.com/rarimo/rarimo-core/x/oraclemanager/types"
 )
 
 type StateDataProvider interface {

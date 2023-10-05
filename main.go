@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"gitlab.com/rarimo/polygonid/evm-identity-saver-svc/internal/cli"
+	"github.com/rarimo/evm-identity-saver-svc/internal/cli"
 )
 
 func main() {

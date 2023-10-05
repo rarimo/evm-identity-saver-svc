@@ -4,30 +4,28 @@ project: "backend"
 image: builder
 from: golang:1.19-alpine
 docker:
-  WORKDIR: /go/src/gitlab.com/rarimo/polygonid/evm-identity-saver-svc
+  WORKDIR: /go/src/github.com/rarimo/evm-identity-saver-svc
 git:
   - add: /
-    to: /go/src/gitlab.com/rarimo/polygonid/evm-identity-saver-svc
+    to: /go/src/github.com/rarimo/evm-identity-saver-svc
     stageDependencies:
       setup:
         - "**/*"
 shell:
   install:
     - apk add git build-base
-    - git config --global url."https://gitlab-ci-token:{{ env "CI_JOB_TOKEN" }}@gitlab.com/".insteadOf https://gitlab.com/
-    - echo "machine gitlab.com login gitlab-ci-token password {{ env "CI_JOB_TOKEN" }}" > ~/.netrc
-    - go env -w GOPRIVATE=gitlab.com/*
-    - go env -w GONOSUMDB=gitlab.com/*
-    - go env -w GONOPROXY=gitlab.com/*
-    - cd /go/src/gitlab.com/rarimo/polygonid/evm-identity-saver-svc
+    - go env -w GOPRIVATE=github.com/*
+    - go env -w GONOSUMDB=github.com/*
+    - go env -w GONOPROXY=github.com/*
+    - cd /go/src/github.com/rarimo/evm-identity-saver-svc
     - go mod tidy
     - go mod vendor
   setup:
     - export CGO_ENABLED=0
     - export GO111MODULE=on
     - export GOOS=linux
-    - cd /go/src/gitlab.com/rarimo/polygonid/evm-identity-saver-svc
-    - go build  -o /usr/local/bin/evm-identity-saver-svc /go/src/gitlab.com/rarimo/polygonid/evm-identity-saver-svc
+    - cd /go/src/github.com/rarimo/evm-identity-saver-svc
+    - go build  -o /usr/local/bin/evm-identity-saver-svc /go/src/github.com/rarimo/evm-identity-saver-svc
 
 ---
 image: service

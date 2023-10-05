@@ -10,14 +10,14 @@ import (
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 
-	"gitlab.com/rarimo/polygonid/evm-identity-saver-svc/internal/services/grpc"
-	"gitlab.com/rarimo/polygonid/evm-identity-saver-svc/internal/services/voting"
+	"github.com/rarimo/evm-identity-saver-svc/internal/services/grpc"
+	"github.com/rarimo/evm-identity-saver-svc/internal/services/voting"
 
-	"gitlab.com/rarimo/polygonid/evm-identity-saver-svc/internal/services/evm"
+	"github.com/rarimo/evm-identity-saver-svc/internal/services/evm"
 
 	"github.com/alecthomas/kingpin"
+	"github.com/rarimo/evm-identity-saver-svc/internal/config"
 	"gitlab.com/distributed_lab/kit/kv"
-	"gitlab.com/rarimo/polygonid/evm-identity-saver-svc/internal/config"
 )
 
 func Run(args []string) bool {

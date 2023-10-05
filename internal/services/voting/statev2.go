@@ -5,16 +5,16 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/rarimo/evm-identity-saver-svc/internal/config"
+	"github.com/rarimo/evm-identity-saver-svc/internal/rarimo"
+	statebind "github.com/rarimo/evm-identity-saver-svc/pkg/state"
+	oracletypes "github.com/rarimo/rarimo-core/x/oraclemanager/types"
+	rarimocore "github.com/rarimo/rarimo-core/x/rarimocore/types"
+	"github.com/rarimo/saver-grpc-lib/voter"
+	"github.com/rarimo/saver-grpc-lib/voter/verifiers"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/running"
-	"gitlab.com/rarimo/polygonid/evm-identity-saver-svc/internal/config"
-	"gitlab.com/rarimo/polygonid/evm-identity-saver-svc/internal/rarimo"
-	statebind "gitlab.com/rarimo/polygonid/evm-identity-saver-svc/pkg/state"
-	oracletypes "gitlab.com/rarimo/rarimo-core/x/oraclemanager/types"
-	rarimocore "gitlab.com/rarimo/rarimo-core/x/rarimocore/types"
-	"gitlab.com/rarimo/savers/saver-grpc-lib/voter"
-	"gitlab.com/rarimo/savers/saver-grpc-lib/voter/verifiers"
 )
 
 const (

@@ -5,16 +5,16 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/rarimo/evm-identity-saver-svc/internal/rarimo"
 	"gitlab.com/distributed_lab/logan/v3"
-	"gitlab.com/rarimo/polygonid/evm-identity-saver-svc/internal/rarimo"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/rarimo/evm-identity-saver-svc/internal/config"
+	statebind "github.com/rarimo/evm-identity-saver-svc/pkg/state"
+	oracletypes "github.com/rarimo/rarimo-core/x/oraclemanager/types"
+	"github.com/rarimo/saver-grpc-lib/broadcaster"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/running"
-	"gitlab.com/rarimo/polygonid/evm-identity-saver-svc/internal/config"
-	statebind "gitlab.com/rarimo/polygonid/evm-identity-saver-svc/pkg/state"
-	oracletypes "gitlab.com/rarimo/rarimo-core/x/oraclemanager/types"
-	"gitlab.com/rarimo/savers/saver-grpc-lib/broadcaster"
 )
 
 const MaxBlocksPerRequest = 100

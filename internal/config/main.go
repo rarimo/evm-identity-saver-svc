@@ -1,12 +1,12 @@
 package config
 
 import (
+	"github.com/rarimo/saver-grpc-lib/broadcaster"
+	"github.com/rarimo/saver-grpc-lib/metrics"
+	"github.com/rarimo/saver-grpc-lib/voter"
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/distributed_lab/kit/comfig"
 	"gitlab.com/distributed_lab/kit/kv"
-	"gitlab.com/rarimo/savers/saver-grpc-lib/broadcaster"
-	"gitlab.com/rarimo/savers/saver-grpc-lib/metrics"
-	"gitlab.com/rarimo/savers/saver-grpc-lib/voter"
 	"google.golang.org/grpc"
 )
 
