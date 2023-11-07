@@ -34,10 +34,11 @@ func RunAPI(ctx context.Context, cfg config.Config) {
 		listener: cfg.Listener(),
 		voter: voter.NewVoter(
 			cfg.Ethereum().NetworkName,
-			cfg.Log().WithField("who", "evm-saver-voter"),
+			cfg.Log().WithField("who", "grpc-voter"),
 			cfg.Broadcaster(),
 			map[rarimotypes.OpType]voter.Verifier{
-				rarimotypes.OpType_IDENTITY_DEFAULT_TRANSFER: voting.NewStateUpdateVerifier(cfg),
+				rarimotypes.OpType_IDENTITY_STATE_TRANSFER: voting.NewStateUpdateVerifier(cfg),
+				rarimotypes.OpType_IDENTITY_GIST_TRANSFER:  voting.NewGISTUpdateVerifier(cfg),
 			},
 		),
 	})

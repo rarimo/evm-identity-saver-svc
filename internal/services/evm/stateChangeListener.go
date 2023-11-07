@@ -34,6 +34,17 @@ func RunStateChangeListener(ctx context.Context, cfg config.Config) {
 		panic(errors.Wrap(err, "failed to init state change handler"))
 	}
 
+	filtrationDisabled := cfg.States().DisableFiltration
+	allowList := Map(cfg.States().IssuerID)
+
+	filter := func(id string) bool {
+		if filtrationDisabled {
+			return true
+		}
+		_, ok := allowList[id]
+		return ok
+	}
+
 	listener := stateChangeListener{
 		log:          log,
 		broadcaster:  cfg.Broadcaster(),
@@ -45,10 +56,9 @@ func RunStateChangeListener(ctx context.Context, cfg config.Config) {
 			cfg.Ethereum().NetworkName,
 			stateData,
 		),
-		watchedIssuerID:   Map(cfg.States().IssuerID),
-		disableFiltration: cfg.States().DisableFiltration,
-		fromBlock:         cfg.Ethereum().StartFromBlock,
-		blockWindow:       cfg.Ethereum().BlockWindow,
+		filter:      filter,
+		fromBlock:   cfg.Ethereum().StartFromBlock,
+		blockWindow: cfg.Ethereum().BlockWindow,
 	}
 
 	running.WithBackOff(ctx, log, runnerName,
@@ -57,7 +67,8 @@ func RunStateChangeListener(ctx context.Context, cfg config.Config) {
 }
 
 type stateUpdateMsger interface {
-	StateUpdateMsgByBlock(ctx context.Context, issuer, block *big.Int) (*oracletypes.MsgCreateIdentityDefaultTransferOp, error)
+	StateUpdateMsgByBlock(ctx context.Context, issuer, block *big.Int) (*oracletypes.MsgCreateIdentityStateTransferOp, error)
+	GISTUpdateMsgByBlock(ctx context.Context, block *big.Int) (*oracletypes.MsgCreateIdentityGISTTransferOp, error)
 }
 
 type blockHandler interface {
@@ -71,10 +82,9 @@ type stateChangeListener struct {
 	msger        stateUpdateMsger
 	blockHandler blockHandler
 
-	watchedIssuerID   map[string]struct{}
-	disableFiltration bool
-	fromBlock         uint64
-	blockWindow       uint64
+	filter      func(string) bool
+	fromBlock   uint64
+	blockWindow uint64
 }
 
 func (l *stateChangeListener) subscription(ctx context.Context) error {
@@ -132,14 +142,27 @@ func (l *stateChangeListener) subscription(ctx context.Context) error {
 			"log_index": e.Raw.Index,
 		}).Debugf("got event: id: %s block: %s timestamp: %s state: %s", e.Id.String(), e.BlockN.String(), e.Timestamp.String(), e.State.String())
 
-		if !l.disableFiltration {
-			if _, ok := l.watchedIssuerID[e.Id.String()]; !ok {
-				l.log.Debugf("Skipping event: id %s is not allowed", e.Id.String())
-				continue
-			}
+		msg1, err := l.msger.GISTUpdateMsgByBlock(ctx, e.BlockN)
+		if err != nil {
+			l.log.WithError(err).WithField("tx_hash", e.Raw.TxHash.String()).Error("failed to craft GIST updated msg")
+			continue
 		}
 
-		// Getting last state message
+		if msg1 == nil {
+			l.log.WithField("tx_hash", e.Raw.TxHash.String()).Info("ignoring that GIST transition")
+			continue
+		}
+
+		if err := l.broadcaster.BroadcastTx(ctx, msg1); err != nil {
+			l.log.WithError(err).WithField("tx_hash", e.Raw.TxHash.String()).Error(err, "failed to broadcast GIST updated msg")
+			continue
+		}
+
+		if !l.filter(e.Id.String()) {
+			l.log.WithField("tx_hash", e.Raw.TxHash.String()).Info("Issuer ID is not supported for state update messages")
+			return nil
+		}
+
 		msg, err := l.msger.StateUpdateMsgByBlock(ctx, e.Id, e.BlockN)
 		if err != nil {
 			l.log.WithError(err).WithField("tx_hash", e.Raw.TxHash.String()).Error("failed to craft state updated msg")
