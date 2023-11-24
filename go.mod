@@ -7,7 +7,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gogo/protobuf v1.3.3
-	github.com/rarimo/rarimo-core v1.0.8-0.20231107191012-470dd204b863
+	github.com/rarimo/rarimo-core v1.0.7-0.20231123231906-566dc0033e75
 	github.com/rarimo/saver-grpc-lib v1.0.0
 	github.com/spf13/cast v1.5.1
 	github.com/tendermint/tendermint v0.34.27
