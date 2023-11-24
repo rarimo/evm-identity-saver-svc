@@ -19,10 +19,8 @@ shell:
     - go env -w GONOPROXY=github.com/*
     - cd /go/src/github.com/rarimo/evm-identity-saver-svc
     - go mod tidy
-    - go mod vendor
   setup:
     - export CGO_ENABLED=0
-    - export GO111MODULE=on
     - export GOOS=linux
     - cd /go/src/github.com/rarimo/evm-identity-saver-svc
     - go build  -o /usr/local/bin/evm-identity-saver-svc /go/src/github.com/rarimo/evm-identity-saver-svc
