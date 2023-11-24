@@ -69,7 +69,7 @@ func Run(args []string) bool {
 	runStateUpdatesAll := func() {
 		cfg.Log().Info("starting all state updates related services")
 
-		run(voting.RunStateUpdateVoter, "voter")
+		run(voting.RunVoter, "voter")
 		run(grpc.RunAPI, "grpc-api")
 		run(evm.RunStateChangeListener, "state-change-listener")
 	}
@@ -84,7 +84,7 @@ func Run(args []string) bool {
 	case stateUpdateAll.FullCommand():
 		runStateUpdatesAll()
 	case stateUpdateVoter.FullCommand():
-		run(voting.RunStateUpdateVoter, "voter")
+		run(voting.RunVoter, "voter")
 	case stateUpdateSaver.FullCommand():
 		run(evm.RunStateChangeListener, "state-change-listener")
 	default:
