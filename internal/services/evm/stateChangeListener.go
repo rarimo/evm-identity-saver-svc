@@ -17,8 +17,6 @@ import (
 	"gitlab.com/distributed_lab/running"
 )
 
-const MaxBlocksPerRequest = 100
-
 func RunStateChangeListener(ctx context.Context, cfg config.Config) {
 	const runnerName = "state_change_listener"
 
@@ -54,11 +52,13 @@ func RunStateChangeListener(ctx context.Context, cfg config.Config) {
 			cfg.Broadcaster().Sender(),
 			cfg.Ethereum().ContractAddr.String(),
 			cfg.Ethereum().NetworkName,
+			cfg.States().StatesPerRequest,
 			stateData,
 		),
 		filter:      filter,
 		fromBlock:   cfg.Ethereum().StartFromBlock,
 		blockWindow: cfg.Ethereum().BlockWindow,
+		maxBlocks:   cfg.States().MaxBlocksPerRequest,
 	}
 
 	running.WithBackOff(ctx, log, runnerName,
@@ -85,6 +85,7 @@ type stateChangeListener struct {
 	filter      func(string) bool
 	fromBlock   uint64
 	blockWindow uint64
+	maxBlocks   uint64
 }
 
 func (l *stateChangeListener) subscription(ctx context.Context) error {
@@ -100,9 +101,9 @@ func (l *stateChangeListener) subscription(ctx context.Context) error {
 		return nil
 	}
 
-	if l.fromBlock+MaxBlocksPerRequest < lastBlock {
-		l.log.Debugf("maxBlockPerRequest limit exceeded: setting last block to %d instead of %d", l.fromBlock+MaxBlocksPerRequest, lastBlock)
-		lastBlock = l.fromBlock + MaxBlocksPerRequest
+	if l.fromBlock+l.maxBlocks < lastBlock {
+		l.log.Debugf("maxBlockPerRequest limit exceeded: setting last block to %d instead of %d", l.fromBlock+l.maxBlocks, lastBlock)
+		lastBlock = l.fromBlock + l.maxBlocks
 	}
 
 	l.log.Infof("Starting subscription from %d to %d", l.fromBlock, lastBlock)

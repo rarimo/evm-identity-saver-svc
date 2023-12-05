@@ -7,8 +7,10 @@ import (
 )
 
 type StateV2Config struct {
-	IssuerID          []string `fig:"issuer_id"`
-	DisableFiltration bool     `fig:"disable_filtration"`
+	IssuerID            []string `fig:"issuer_id"`
+	DisableFiltration   bool     `fig:"disable_filtration"`
+	StatesPerRequest    int64    `fig:"states_per_request"`
+	MaxBlocksPerRequest uint64   `fig:"max_blocks_per_request"`
 }
 
 func (c *config) States() StateV2Config {

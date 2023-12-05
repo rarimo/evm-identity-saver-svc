@@ -4,9 +4,8 @@ import (
 	"context"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	statebind "github.com/rarimo/evm-identity-saver-svc/pkg/state"
 	oracletypes "github.com/rarimo/rarimo-core/x/oraclemanager/types"
@@ -28,11 +27,12 @@ type StateUpdateMessageMaker struct {
 	txCreatorAddr     string
 	contract          string
 	homeChain         string
+	statesPerRequest  int64
 	stateDataProvider StateDataProvider
 }
 
-func NewStateUpdateMessageMaker(txCreatorAddr string, contract string, homeChain string, stateDataProvider StateDataProvider) *StateUpdateMessageMaker {
-	return &StateUpdateMessageMaker{txCreatorAddr: txCreatorAddr, contract: contract, homeChain: homeChain, stateDataProvider: stateDataProvider}
+func NewStateUpdateMessageMaker(txCreatorAddr string, contract string, homeChain string, statesPerRequest int64, stateDataProvider StateDataProvider) *StateUpdateMessageMaker {
+	return &StateUpdateMessageMaker{txCreatorAddr: txCreatorAddr, contract: contract, homeChain: homeChain, statesPerRequest: statesPerRequest, stateDataProvider: stateDataProvider}
 }
 
 func (m *StateUpdateMessageMaker) StateUpdateMsgByBlock(ctx context.Context, issuer, block *big.Int) (*oracletypes.MsgCreateIdentityStateTransferOp, error) {
@@ -138,32 +138,32 @@ func (m *StateUpdateMessageMaker) getStatesOnBlock(ctx context.Context, issuer, 
 		return nil, nil, errors.Wrap(err, "failed to get overall states count")
 	}
 
-	if length.Cmp(big.NewInt(1)) == 0 {
-		// It is a new state. Only one state transition exist. Ignore that state transition.
-		// FIXME
+	if length.Cmp(big.NewInt(m.statesPerRequest)) == 0 {
+		// We need more states on contract. Ignore that state transition.
 		return nil, nil, nil
 	}
+
+	length = new(big.Int).Sub(length, big.NewInt(m.statesPerRequest))
 
 	for {
 		states, err := m.stateDataProvider.GetStateInfoHistoryById(&bind.CallOpts{
 			Context: ctx,
-		}, issuer, new(big.Int).Sub(length, big.NewInt(2)), big.NewInt(2))
+		}, issuer, length, big.NewInt(m.statesPerRequest))
 
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "failed to get last two states")
 		}
 
-		replacedState := states[0]
-		latestState := states[1]
-
-		if latestState.CreatedAtBlock.Cmp(block) == 0 {
-			return &latestState, &replacedState, nil
+		for i := 1; i < len(states); i++ {
+			replacedState := states[0]
+			latestState := states[1]
+			if latestState.CreatedAtBlock.Cmp(block) == 0 {
+				return &latestState, &replacedState, nil
+			}
 		}
 
-		// FIXME maybe increase step to reduce RPC calls amount
-		length.Sub(length, big.NewInt(1))
-
-		if length.Cmp(big.NewInt(1)) == 0 {
+		length = new(big.Int).Sub(length, big.NewInt(m.statesPerRequest-1))
+		if length.Cmp(big.NewInt(1)) <= 0 {
 			return nil, nil, errors.Wrap(err, "requested state on block does not exist")
 		}
 	}
@@ -177,32 +177,33 @@ func (m *StateUpdateMessageMaker) getGISTsOnBlock(ctx context.Context, block *bi
 		return nil, nil, errors.Wrap(err, "failed to get overall gists count")
 	}
 
-	if length.Cmp(big.NewInt(1)) == 0 {
-		// Only one state transition exist. Ignore that state transition.
-		// FIXME
+	if length.Cmp(big.NewInt(m.statesPerRequest)) == 0 {
+		// We need more states on contract. Ignore that state transition.
 		return nil, nil, nil
 	}
+
+	length = new(big.Int).Sub(length, big.NewInt(m.statesPerRequest))
 
 	for {
 		gists, err := m.stateDataProvider.GetGISTRootHistory(&bind.CallOpts{
 			Context: ctx,
-		}, new(big.Int).Sub(length, big.NewInt(2)), big.NewInt(2))
+		}, length, big.NewInt(m.statesPerRequest))
 
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "failed to get last two gists")
 		}
 
-		replacedGIST := gists[0]
-		latestGIST := gists[1]
+		for i := 1; i < len(gists); i++ {
+			replacedGIST := gists[i-1]
+			latestGIST := gists[i]
 
-		if latestGIST.CreatedAtBlock.Cmp(block) == 0 {
-			return &latestGIST, &replacedGIST, nil
+			if latestGIST.CreatedAtBlock.Cmp(block) == 0 {
+				return &latestGIST, &replacedGIST, nil
+			}
 		}
 
-		// FIXME maybe increase step to reduce RPC calls amount
-		length.Sub(length, big.NewInt(1))
-
-		if length.Cmp(big.NewInt(1)) == 0 {
+		length = new(big.Int).Sub(length, big.NewInt(m.statesPerRequest-1))
+		if length.Cmp(big.NewInt(1)) <= 0 {
 			return nil, nil, errors.Wrap(err, "requested gist on block does not exist")
 		}
 	}
