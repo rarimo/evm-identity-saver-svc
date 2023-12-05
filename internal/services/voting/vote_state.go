@@ -36,6 +36,7 @@ func NewStateUpdateVerifier(cfg config.Config) *StateUpdateVerifier {
 			cfg.Broadcaster().Sender(),
 			cfg.Ethereum().ContractAddr.String(),
 			cfg.Ethereum().NetworkName,
+			cfg.States().StatesPerRequest,
 			stateV2,
 		),
 	}
