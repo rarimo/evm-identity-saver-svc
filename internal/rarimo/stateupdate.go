@@ -138,9 +138,9 @@ func (m *StateUpdateMessageMaker) getStatesOnBlock(ctx context.Context, issuer, 
 		return nil, nil, errors.Wrap(err, "failed to get overall states count")
 	}
 
-	if length.Cmp(big.NewInt(m.statesPerRequest)) == 0 {
+	if length.Cmp(big.NewInt(m.statesPerRequest)) <= 0 {
 		// We need more states on contract. Ignore that state transition.
-		return nil, nil, nil
+		return nil, nil, errors.New("states count less then required")
 	}
 
 	length = new(big.Int).Sub(length, big.NewInt(m.statesPerRequest))
@@ -155,8 +155,8 @@ func (m *StateUpdateMessageMaker) getStatesOnBlock(ctx context.Context, issuer, 
 		}
 
 		for i := 1; i < len(states); i++ {
-			replacedState := states[0]
-			latestState := states[1]
+			replacedState := states[i-1]
+			latestState := states[i]
 			if latestState.CreatedAtBlock.Cmp(block) == 0 {
 				return &latestState, &replacedState, nil
 			}
@@ -177,9 +177,9 @@ func (m *StateUpdateMessageMaker) getGISTsOnBlock(ctx context.Context, block *bi
 		return nil, nil, errors.Wrap(err, "failed to get overall gists count")
 	}
 
-	if length.Cmp(big.NewInt(m.statesPerRequest)) == 0 {
+	if length.Cmp(big.NewInt(m.statesPerRequest)) <= 0 {
 		// We need more states on contract. Ignore that state transition.
-		return nil, nil, nil
+		return nil, nil, errors.New("GISTs count less then required")
 	}
 
 	length = new(big.Int).Sub(length, big.NewInt(m.statesPerRequest))
