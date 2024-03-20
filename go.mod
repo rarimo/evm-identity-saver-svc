@@ -7,7 +7,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gogo/protobuf v1.3.3
-	github.com/rarimo/rarimo-core v1.0.7-0.20231123231906-566dc0033e75
+	github.com/rarimo/rarimo-core v1.1.0
 	github.com/rarimo/saver-grpc-lib v1.0.0
 	github.com/spf13/cast v1.5.1
 	github.com/tendermint/tendermint v0.34.27
@@ -119,6 +119,7 @@ require (
 	github.com/prometheus/common v0.39.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rarimo/broadcaster-svc v1.0.2 // indirect
+	github.com/rarimo/go-merkle v0.0.0-20231004122345-36fa49031c66 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rjeczalik/notify v0.9.1 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect

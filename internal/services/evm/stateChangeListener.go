@@ -2,6 +2,10 @@ package evm
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/rarimo/rarimo-core/x/rarimocore/crypto/pkg"
+	rarimocore "github.com/rarimo/rarimo-core/x/rarimocore/types"
+	"google.golang.org/grpc"
 	"math/big"
 	"time"
 
@@ -59,6 +63,7 @@ func RunStateChangeListener(ctx context.Context, cfg config.Config) {
 		fromBlock:   cfg.Ethereum().StartFromBlock,
 		blockWindow: cfg.Ethereum().BlockWindow,
 		maxBlocks:   cfg.States().MaxBlocksPerRequest,
+		cosmos:      cfg.Cosmos(),
 	}
 
 	running.WithBackOff(ctx, log, runnerName,
@@ -81,6 +86,7 @@ type stateChangeListener struct {
 	broadcaster  broadcaster.Broadcaster
 	msger        stateUpdateMsger
 	blockHandler blockHandler
+	cosmos       *grpc.ClientConn
 
 	filter      func(string) bool
 	fromBlock   uint64
@@ -154,6 +160,16 @@ func (l *stateChangeListener) subscription(ctx context.Context) error {
 			continue
 		}
 
+		exist, err := l.checkGISTExist(ctx, msg1)
+		if err != nil {
+			l.log.WithError(err).WithField("tx_hash", e.Raw.TxHash.String()).Error("failed to check operation already exist")
+		}
+
+		if exist {
+			l.log.WithField("tx_hash", e.Raw.TxHash.String()).Debug("operation already exist")
+			continue
+		}
+
 		if err := l.broadcaster.BroadcastTx(ctx, msg1); err != nil {
 			l.log.WithError(err).WithField("tx_hash", e.Raw.TxHash.String()).Error(err, "failed to broadcast GIST updated msg")
 			continue
@@ -175,6 +191,16 @@ func (l *stateChangeListener) subscription(ctx context.Context) error {
 			continue
 		}
 
+		exist, err = l.checkStateExist(ctx, msg)
+		if err != nil {
+			l.log.WithError(err).WithField("tx_hash", e.Raw.TxHash.String()).Error("failed to check operation already exist")
+		}
+
+		if exist {
+			l.log.WithField("tx_hash", e.Raw.TxHash.String()).Debug("operation already exist")
+			continue
+		}
+
 		if err := l.broadcaster.BroadcastTx(ctx, msg); err != nil {
 			l.log.WithError(err).WithField("tx_hash", e.Raw.TxHash.String()).Error(err, "failed to broadcast state updated msg")
 			continue
@@ -182,6 +208,40 @@ func (l *stateChangeListener) subscription(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (l *stateChangeListener) checkGISTExist(ctx context.Context, msg *oracletypes.MsgCreateIdentityGISTTransferOp) (bool, error) {
+	resp, err := oracletypes.NewQueryClient(l.cosmos).IdentityGISTTransfer(ctx, &oracletypes.QueryGetIdentityGISTTransferRequest{Msg: *msg})
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get operation by message")
+	}
+
+	content, err := pkg.GetIdentityGISTTransferContent(&resp.Transfer)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get operation content")
+	}
+
+	index := hexutil.Encode(content.CalculateHash())
+
+	_, err = rarimocore.NewQueryClient(l.cosmos).Operation(ctx, &rarimocore.QueryGetOperationRequest{Index: index})
+	return err == nil, nil
+}
+
+func (l *stateChangeListener) checkStateExist(ctx context.Context, msg *oracletypes.MsgCreateIdentityStateTransferOp) (bool, error) {
+	resp, err := oracletypes.NewQueryClient(l.cosmos).IdentityStateTransfer(ctx, &oracletypes.QueryGetIdentityStateTransferRequest{Msg: *msg})
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get operation by message")
+	}
+
+	content, err := pkg.GetIdentityStateTransferContent(&resp.Transfer)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get operation content")
+	}
+
+	index := hexutil.Encode(content.CalculateHash())
+
+	_, err = rarimocore.NewQueryClient(l.cosmos).Operation(ctx, &rarimocore.QueryGetOperationRequest{Index: index})
+	return err == nil, nil
 }
 
 func Map[T comparable](arr []T) map[T]struct{} {
